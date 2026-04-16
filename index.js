@@ -4,7 +4,7 @@ const { Server } = require("socket.io");
 const cloudbase = require("@cloudbase/node-sdk");
 
 const app = cloudbase.init({
-  env: "这里填写你的腾讯云环境ID"
+  env: "danmu-system-d8g83y0mf49644925"
 });
 const db = app.database();
 
