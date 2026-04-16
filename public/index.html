@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<meta charset="utf-8">
+<title>实名弹幕系统</title>
+<style>
+  body{background:#111;color:#fff;font-family:微软雅黑}
+  .login{margin:50px auto;width:320px;text-align:center}
+  .danmu-area{height:60vh;overflow:hidden;position:relative}
+  .danmu{position:absolute;white-space:nowrap;animation:move 8s linear;font-size:20px}
+  @keyframes move{from{right:-100%}to{right:100%}}
+  .input-area{position:fixed;bottom:20px;left:0;right:0;text-align:center}
+  input{padding:10px;width:400px;font-size:16px}
+  button{padding:10px 20px;font-size:16px;background:#0099ff;color:white;border:none}
+  .theme{text-align:center;font-size:26px;margin:20px;color:#ffcc00}
+  .admin{position:fixed;top:10px;right:10px;display:none}
+</style>
+
+<div class="login" id="loginBox">
+  <h3>请实名登录</h3>
+  <input id="realName" placeholder="真实姓名"><br><br>
+  <input id="idCard" placeholder="身份证号"><br><br>
+  <button onclick="login()">登录</button>
+</div>
+
+<div class="theme" id="theme"></div>
+<div class="danmu-area" id="danmuArea"></div>
+
+<div class="input-area">
+  <input id="content" placeholder="输入弹幕..." disabled>
+  <button onclick="send()" disabled>发送</button>
+</div>
+
+<div class="admin" id="adminBox">
+  <h3>管理后台</h3>
+  <input id="newTheme" placeholder="输入新主题">
+  <button onclick="setTheme()">修改主题</button>
+</div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+const socket = io();
+function login(){
+  const realName=document.getElementById('realName').value
+  const idCard=document.getElementById('idCard').value
+  socket.emit('login',{realName,idCard},res=>{
+    if(res.success){
+      document.getElementById('loginBox').style.display='none'
+      document.getElementById('content').disabled=false
+      document.querySelector('button[onclick="send()"]').disabled=false
+      if(realName==='admin')document.getElementById('adminBox').style.display='block'
+    }
+  })
+}
+function send(){
+  const content=document.getElementById('content').value
+  if(!content)return
+  socket.emit('sendDanmu',content)
+  document.getElementById('content').value=''
+}
+socket.on('newDanmu',data=>{
+  const div=document.createElement('div')
+  div.className='danmu'
+  div.innerText=data.realName+'：'+data.content
+  div.style.top=Math.random()*500+'px'
+  div.style.color=`rgb(${Math.random()*255},${Math.random()*255},${Math.random()*255})`
+  document.getElementById('danmuArea').appendChild(div)
+  setTimeout(()=>div.remove(),8000)
+})
+socket.on('theme',t=>{
+  document.getElementById('theme').innerText='当前主题：'+t
+})
+function setTheme(){
+  const t=document.getElementById('newTheme').value
+  socket.emit('setTheme',t)
+}
+</script>
